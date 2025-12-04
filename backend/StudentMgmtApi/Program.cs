@@ -32,21 +32,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Ensure the database is created from EF models (development only)
+// Ensure the database is created from EF models. Do NOT delete the DB on startup
+// so development data persists between runs. Use EF Migrations to evolve schema.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // In development we recreate the DB when the model changes so new fields (DOB/phone/address)
-    // are available automatically. WARNING: this drops existing data in development.
-    if (builder.Environment.IsDevelopment())
-    {
-        db.Database.EnsureDeleted();
-        db.Database.EnsureCreated();
-    }
-    else
-    {
-        db.Database.EnsureCreated();
-    }
+    // Create the database if it doesn't exist. For schema changes, use EF Core
+    // migrations (`dotnet ef migrations add <Name>` + `dotnet ef database update`).
+    db.Database.EnsureCreated();
 }
 
 // Use CORS
