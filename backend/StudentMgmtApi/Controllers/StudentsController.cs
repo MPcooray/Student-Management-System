@@ -49,15 +49,39 @@ namespace StudentMgmtApi.Controllers
             var student = await _db.Students.FindAsync(id);
             if (student == null) return NotFound();
 
-            foreach (var cid in courseIds)
-            {
-                // skip if already enrolled
-                bool exists = await _db.Enrollments.AnyAsync(e => e.StudentId == id && e.CourseId == cid);
-                if (exists) continue;
+            // normalize input
+            var desired = (courseIds ?? Array.Empty<int>()).ToHashSet();
 
+            // load existing enrollments for this student
+            var existing = await _db.Enrollments.Where(e => e.StudentId == id).ToListAsync();
+            var existingCourseIds = existing.Select(e => e.CourseId).ToHashSet();
+
+            // compute enrollments to remove (present but not desired)
+            var toRemove = existing.Where(e => !desired.Contains(e.CourseId)).ToList();
+            if (toRemove.Any()) _db.Enrollments.RemoveRange(toRemove);
+
+            // compute course ids to add (desired but not present)
+            var toAdd = desired.Except(existingCourseIds);
+            foreach (var cid in toAdd)
+            {
                 _db.Enrollments.Add(new Enrollment { StudentId = id, CourseId = cid });
             }
 
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var student = await _db.Students.FindAsync(id);
+            if (student == null) return NotFound();
+
+            // remove related enrollments first
+            var enrollments = _db.Enrollments.Where(e => e.StudentId == id);
+            _db.Enrollments.RemoveRange(enrollments);
+
+            _db.Students.Remove(student);
             await _db.SaveChangesAsync();
             return NoContent();
         }

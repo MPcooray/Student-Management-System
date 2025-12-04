@@ -1,10 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using StudentMgmtApi.Data;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        // Prevent circular reference errors when serializing EF Core navigation properties
+        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Database (reads connection string from appsettings.json -> "DefaultConnection")
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -30,7 +36,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    // In development we recreate the DB when the model changes so new fields (DOB/phone/address)
+    // are available automatically. WARNING: this drops existing data in development.
+    if (builder.Environment.IsDevelopment())
+    {
+        db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
+    }
+    else
+    {
+        db.Database.EnsureCreated();
+    }
 }
 
 // Use CORS

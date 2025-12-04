@@ -21,8 +21,14 @@ export default function StudentsList(){
 
   async function handleDelete(id){
     if(!confirm('Delete this student?')) return
-    await deleteStudent(id)
-    load()
+    try{
+      await deleteStudent(id)
+      alert('Deleted')
+      load()
+    }catch(err){
+      console.error(err)
+      alert('Failed to delete student')
+    }
   }
 
   return (
@@ -48,7 +54,7 @@ export default function StudentsList(){
                 <td className="py-2">{s.id}</td>
                 <td className="py-2">{s.firstName} {s.lastName}</td>
                 <td className="py-2">{s.email}</td>
-                <td className="py-2">{s.courseIds ? s.courseIds.length : 0}</td>
+                <td className="py-2">{s.courseIds ? s.courseIds.length : (s.enrollments ? s.enrollments.length : 0)}</td>
                 <td className="py-2 text-right">
                   <Link to={`/students/${s.id}`} className="text-primary mr-2">View</Link>
                   <button onClick={()=> handleDelete(s.id)} className="text-red-600">Delete</button>

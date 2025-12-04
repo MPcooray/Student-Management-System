@@ -20,8 +20,14 @@ export default function CoursesPage(){
 
   async function remove(id){
     if(!confirm('Delete course?')) return
-    await deleteCourse(id)
-    load()
+    try{
+      await deleteCourse(id)
+      alert('Deleted')
+      load()
+    }catch(err){
+      console.error(err)
+      alert('Failed to delete course')
+    }
   }
 
   return (

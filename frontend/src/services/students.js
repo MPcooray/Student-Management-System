@@ -2,12 +2,22 @@ import api from './apiClient';
 
 export async function fetchStudents({ page = 1, pageSize = 10, search = '', sort = '' } = {}) {
   const res = await api.get('/students', { params: { page, pageSize, search, sort } });
-  return res.data;
+  const data = res.data;
+  // normalize student objects to include courseIds for the frontend
+  const normalize = (s) => ({
+    ...s,
+    courseIds: Array.isArray(s.enrollments) ? s.enrollments.map(e => (e.course?.id ?? e.courseId)) : []
+  })
+
+  if (Array.isArray(data)) return data.map(normalize)
+  if (data?.items && Array.isArray(data.items)) return { ...data, items: data.items.map(normalize) }
+  return normalize(data)
 }
 
 export async function fetchStudent(id) {
   const res = await api.get(`/students/${id}`);
-  return res.data;
+  const s = res.data;
+  return { ...s, courseIds: Array.isArray(s.enrollments) ? s.enrollments.map(e => (e.course?.id ?? e.courseId)) : [] }
 }
 
 export async function createStudent(payload) {
@@ -22,4 +32,9 @@ export async function updateStudent(id, payload) {
 
 export async function deleteStudent(id) {
   await api.delete(`/students/${id}`);
+}
+
+export async function enrollStudent(id, courseIds) {
+  // backend expects an array of ints in the body for /students/{id}/enroll
+  await api.post(`/students/${id}/enroll`, courseIds);
 }

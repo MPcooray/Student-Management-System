@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchStudent, updateStudent, deleteStudent } from '../services/students'
+import { fetchStudent, enrollStudent, deleteStudent } from '../services/students'
 import CourseSelect from '../components/CourseSelect'
 
 export default function StudentDetail(){
@@ -17,7 +17,7 @@ export default function StudentDetail(){
   async function handleSave(){
     // very small inline edit example: just reassign courses
     try{
-      await updateStudent(id, student)
+      await enrollStudent(id, student.courseIds || [])
       alert('Saved')
       load()
     }catch(e){ console.error(e); alert('Failed') }

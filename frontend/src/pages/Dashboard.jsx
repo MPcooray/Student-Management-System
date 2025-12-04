@@ -7,13 +7,18 @@ export default function Dashboard(){
 
   useEffect(()=>{
     let mounted = true
-    Promise.all([fetchStudents({ pageSize: 1 }), fetchCourses()])
+    // fetch students and courses, then compute enrollments count from student.enrollments
+    Promise.all([fetchStudents({ pageSize: 1000 }), fetchCourses()])
       .then(([studentsRes, courses])=>{
         if(!mounted) return
-        const studentsTotal = studentsRes?.total ?? (Array.isArray(studentsRes) ? studentsRes.length : 0)
+        const studentsArray = Array.isArray(studentsRes) ? studentsRes : (studentsRes.items ?? [])
+        const studentsTotal = studentsRes?.total ?? studentsArray.length
         const coursesTotal = courses?.length ?? 0
-        // enrollments not provided by backend in this mock; approximate
-        setStats({ students: studentsTotal, courses: coursesTotal, enrollments: 0 })
+        const enrollmentsTotal = studentsArray.reduce((acc, s) => {
+          const count = Array.isArray(s.courseIds) ? s.courseIds.length : (Array.isArray(s.enrollments) ? s.enrollments.length : 0)
+          return acc + count
+        }, 0)
+        setStats({ students: studentsTotal, courses: coursesTotal, enrollments: enrollmentsTotal })
       })
     return ()=> mounted = false
   },[])

@@ -22,5 +22,20 @@ namespace StudentMgmtApi.Controllers
             await _db.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAll), new { id = course.Id }, course);
         }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var course = await _db.Courses.FindAsync(id);
+            if (course == null) return NotFound();
+
+            // remove enrollments that reference this course
+            var enrollments = _db.Enrollments.Where(e => e.CourseId == id);
+            _db.Enrollments.RemoveRange(enrollments);
+
+            _db.Courses.Remove(course);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

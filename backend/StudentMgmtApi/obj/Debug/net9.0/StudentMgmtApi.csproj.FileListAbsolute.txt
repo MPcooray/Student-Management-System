@@ -148,3 +148,4 @@
 /Users/manulacooray/StudentManagementSystem/backend/StudentMgmtApi/obj/Debug/net9.0/StudentMgmtApi.pdb
 /Users/manulacooray/StudentManagementSystem/backend/StudentMgmtApi/obj/Debug/net9.0/StudentMgmtApi.genruntimeconfig.cache
 /Users/manulacooray/StudentManagementSystem/backend/StudentMgmtApi/obj/Debug/net9.0/ref/StudentMgmtApi.dll
+/Users/manulacooray/StudentManagementSystem/backend/StudentMgmtApi/obj/Debug/net9.0/StudentMgmtApi.sourcelink.json

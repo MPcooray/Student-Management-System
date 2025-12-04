@@ -2,7 +2,7 @@ import React from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { createStudent } from '../services/students'
+import { createStudent, enrollStudent } from '../services/students'
 import CourseSelect from '../components/CourseSelect'
 import { useNavigate } from 'react-router-dom'
 
@@ -26,7 +26,11 @@ export default function StudentForm(){
 
   const onSubmit = async (data) => {
     try {
-      await createStudent(data)
+      const student = await createStudent(data)
+      // enroll in selected courses if any
+      if (data.courseIds && Array.isArray(data.courseIds) && data.courseIds.length > 0) {
+        await enrollStudent(student.id, data.courseIds)
+      }
       navigate('/students')
     } catch (err) {
       console.error(err)
