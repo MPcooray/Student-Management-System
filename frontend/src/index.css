@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom overrides and small helpers */
+@layer components {
+  .container { @apply max-w-6xl mx-auto px-4 }
+  .card { @apply bg-white rounded-lg shadow p-4 }
+  .btn { @apply inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-white }
+}
+
+@layer utilities {
+  .muted { @apply text-sm text-gray-500 }
+}
