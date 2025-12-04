@@ -40,9 +40,3 @@ Ensure the frontend has the API base URL set in `frontend/.env` (or environment)
 VITE_API_URL=http://localhost:5269/api
 ```
 
-## Notes
-- In development the backend may recreate the database to apply model changes. Use EF Migrations for production workflows.
-- If you see port conflicts, stop any running instance of the API before restarting.
-
-## Next steps
-- Add production build instructions and tests.
