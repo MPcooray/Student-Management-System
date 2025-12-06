@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudentMgmtApi.Data;
 using StudentMgmtApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace StudentMgmtApi.Controllers
 {
@@ -49,6 +51,9 @@ namespace StudentMgmtApi.Controllers
         [Microsoft.AspNetCore.Authorization.Authorize]
         public async Task<IActionResult> Enroll(int id, [FromBody] int[] courseIds)
         {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return Unauthorized();
+
             var student = await _db.Students.FindAsync(id);
             if (student == null) return NotFound();
 
@@ -56,9 +61,12 @@ namespace StudentMgmtApi.Controllers
             var isAdmin = User.Claims.Any(c => c.Type == "role" && c.Value == "Admin");
             if (!isAdmin)
             {
-                // extract user id from JWT 'sub' claim
-                var sub = User.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
-                if (!int.TryParse(sub, out var userId) || userId != id)
+                // Try multiple claim types to find the user ID
+                var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
+                       ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+                       
+                if (string.IsNullOrEmpty(sub) || !int.TryParse(sub, out var userId) || userId != id)
                 {
                     return Forbid();
                 }
@@ -104,8 +112,11 @@ namespace StudentMgmtApi.Controllers
         // Update a student's profile (only the student themself or an Admin)
         [HttpPut("{id:int}")]
         [Microsoft.AspNetCore.Authorization.Authorize]
-        public async Task<IActionResult> Update(int id, [FromBody] Student updated)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentDto dto)
         {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return Unauthorized();
+
             var student = await _db.Students.FindAsync(id);
             if (student == null) return NotFound();
 
@@ -113,24 +124,54 @@ namespace StudentMgmtApi.Controllers
             var isAdmin = User.Claims.Any(c => c.Type == "role" && c.Value == "Admin");
             if (!isAdmin)
             {
-                var sub = User.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
-                if (!int.TryParse(sub, out var userId) || userId != id)
+                // Try multiple claim types to find the user ID
+                var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
+                       ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+                       
+                if (string.IsNullOrEmpty(sub))
+                {
+                    return Unauthorized();
+                }
+                
+                if (!int.TryParse(sub, out var userId))
+                {
+                    return Unauthorized();
+                }
+                
+                if (userId != id)
                 {
                     return Forbid();
                 }
             }
 
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(dto.FirstName))
+                return BadRequest(new { message = "First name is required." });
+            if (string.IsNullOrWhiteSpace(dto.LastName))
+                return BadRequest(new { message = "Last name is required." });
+
             // Update allowed fields
-            student.FirstName = updated.FirstName ?? student.FirstName;
-            student.LastName = updated.LastName ?? student.LastName;
-            student.Phone = updated.Phone ?? student.Phone;
-            student.Address = updated.Address ?? student.Address;
-            student.DateOfBirth = updated.DateOfBirth ?? student.DateOfBirth;
-            student.Gender = updated.Gender ?? student.Gender;
+            student.FirstName = dto.FirstName;
+            student.LastName = dto.LastName;
+            student.Phone = dto.Phone;
+            student.Address = dto.Address;
+            student.DateOfBirth = dto.DateOfBirth;
+            student.Gender = dto.Gender;
 
             _db.Students.Update(student);
             await _db.SaveChangesAsync();
             return Ok(new { student.Id, student.Email, student.FirstName, student.LastName, student.Phone, student.Address, student.DateOfBirth, student.Gender, student.Role });
         }
+    }
+
+    public class UpdateStudentDto
+    {
+        public string FirstName { get; set; } = null!;
+        public string LastName { get; set; } = null!;
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
     }
 }

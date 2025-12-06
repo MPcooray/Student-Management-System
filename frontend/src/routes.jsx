@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
-import ProtectedRoute from './components/ProtectedRoute'
+import RequireAuth from './components/RequireAuth'
 import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import StudentDashboard from './pages/StudentDashboard'
@@ -22,49 +22,49 @@ export default function RoutesApp(){
         <Route 
           path="students" 
           element={
-            <ProtectedRoute requiredRole="Admin">
+            <RequireAuth requiredRole="Admin">
               <StudentsList />
-            </ProtectedRoute>
+            </RequireAuth>
           } 
         />
         <Route 
           path="students/new" 
           element={
-            <ProtectedRoute requiredRole="Admin">
+            <RequireAuth requiredRole="Admin">
               <StudentForm />
-            </ProtectedRoute>
+            </RequireAuth>
           } 
         />
         <Route 
           path="students/:id" 
           element={
-            <ProtectedRoute requiredRole="Admin">
+            <RequireAuth requiredRole="Admin">
               <StudentDetail />
-            </ProtectedRoute>
+            </RequireAuth>
           } 
         />
         <Route 
           path="dashboard" 
           element={
-            <ProtectedRoute requiredRole="Admin">
+            <RequireAuth requiredRole="Admin">
               <Dashboard />
-            </ProtectedRoute>
+            </RequireAuth>
           } 
         />
         <Route 
           path="student-dashboard" 
           element={
-            <ProtectedRoute>
+            <RequireAuth>
               <StudentDashboard />
-            </ProtectedRoute>
+            </RequireAuth>
           } 
         />
         <Route 
           path="courses" 
           element={
-            <ProtectedRoute requiredRole="Admin">
+            <RequireAuth requiredRole="Admin">
               <CoursesPage />
-            </ProtectedRoute>
+            </RequireAuth>
           } 
         />
       </Route>

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { fetchCourses, createCourse, deleteCourse } from '../services/courses'
 import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { useToast } from '../contexts/ToastContext'
 
 export default function CoursesPage(){
+  const { success, error, warning } = useToast()
   const rawUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null
   const currentUser = rawUser ? JSON.parse(rawUser) : null
   const isAdmin = currentUser?.role === 'Admin'
@@ -11,6 +13,8 @@ export default function CoursesPage(){
   const [code, setCode] = useState('')
   const [credits, setCredits] = useState(3)
   const [loading, setLoading] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [deleting, setDeleting] = useState({})
 
   useEffect(()=>{ load() },[])
   async function load(){
@@ -20,21 +24,41 @@ export default function CoursesPage(){
   }
 
   async function add(){
-    if(!name || !code) return alert('Please provide name and code')
-    if(!isAdmin) return alert('Only admins can create courses')
+    if(!name || !code) {
+      warning('Please provide name and code')
+      return
+    }
+    if(!isAdmin) {
+      error('Only admins can create courses')
+      return
+    }
+    setCreating(true)
     try{
       await createCourse({ name, code, credits })
       setName(''); setCode(''); setCredits(3)
+      success('Course created successfully')
       await load()
-    }catch(err){ console.error(err); alert('Failed to create course') }
+    }catch(err){ 
+      console.error(err)
+      error('Failed to create course: ' + (err?.response?.data?.message || err?.response?.data || err.message))
+    } finally {
+      setCreating(false)
+    }
   }
 
   async function remove(id){
-    if(!confirm('Delete course?')) return
+    if(!window.confirm('Delete course?')) return
+    setDeleting(prev => ({ ...prev, [id]: true }))
     try{
       await deleteCourse(id)
+      success('Course deleted successfully')
       await load()
-    }catch(err){ console.error(err); alert('Failed to delete course') }
+    }catch(err){ 
+      console.error(err)
+      error('Failed to delete course')
+    } finally {
+      setDeleting(prev => ({ ...prev, [id]: false }))
+    }
   }
 
   return (
@@ -53,7 +77,9 @@ export default function CoursesPage(){
           <input aria-label="Credits" type="number" value={credits} onChange={e=> setCredits(Number(e.target.value))} className="border rounded-md px-3 py-2" />
         </div>
         <div className="mt-3">
-          <button onClick={add} className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md shadow"><PlusIcon className="w-4 h-4"/> Create</button>
+          <button onClick={add} className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md shadow" disabled={creating}>
+            <PlusIcon className="w-4 h-4"/> {creating ? 'Creating...' : 'Create'}
+          </button>
         </div>
       </div>
 
@@ -77,7 +103,9 @@ export default function CoursesPage(){
                 <td className="py-3">{c.credits ?? 3}</td>
                 <td className="py-3 text-right">
                   {isAdmin ? (
-                    <button onClick={()=> remove(c.id)} className="inline-flex items-center gap-2 text-red-600"><TrashIcon className="w-4 h-4"/>Delete</button>
+                    <button onClick={()=> remove(c.id)} className="inline-flex items-center gap-2 text-red-600" disabled={deleting[c.id]}>
+                      <TrashIcon className="w-4 h-4"/>{deleting[c.id] ? 'Deleting...' : 'Delete'}
+                    </button>
                   ) : (
                     <span className="text-xs text-gray-400">Admin only</span>
                   )}

@@ -23,8 +23,22 @@ export function logout(){
   try {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    // Clear browser history to prevent back button access
+    window.history.replaceState(null, '', '/')
     try { window.dispatchEvent(new Event('authChanged')) } catch(e){}
   } catch(e) {}
+}
+
+export async function getCurrentUserFromServer(){
+  try {
+    const res = await api.get('/auth/me')
+    return res.data
+  } catch(e) {
+    // If token is invalid, clear it
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    return null
+  }
 }
 
 export function getCurrentUser(){

@@ -29,7 +29,7 @@ namespace StudentMgmtApi.Controllers
                 return BadRequest("Email and password are required.");
 
             var exists = await _db.Students.AnyAsync(s => s.Email == dto.Email);
-            if (exists) return Conflict("A user with that email already exists.");
+            if (exists) return BadRequest(new { message = "A user with that email already exists." });
 
             var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
@@ -66,6 +66,21 @@ namespace StudentMgmtApi.Controllers
 
             var token = GenerateJwtToken(user);
             return Ok(new { token, user = new { user.Id, user.Email, user.FirstName, user.LastName, user.Role } });
+        }
+
+        [HttpGet("me")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized();
+
+            var user = await _db.Students.FirstOrDefaultAsync(s => s.Email == email);
+            if (user == null)
+                return Unauthorized();
+
+            return Ok(new { user.Id, user.Email, user.FirstName, user.LastName, user.Role });
         }
 
         private string GenerateJwtToken(Student user)

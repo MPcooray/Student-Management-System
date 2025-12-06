@@ -2,14 +2,18 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchStudent, enrollStudent, updateStudent } from '../services/students'
 import { fetchCourses } from '../services/courses'
+import { useToast } from '../contexts/ToastContext'
 
 export default function StudentDashboard(){
   const navigate = useNavigate()
+  const { success, error } = useToast()
   const [student, setStudent] = useState(null)
   const [courses, setCourses] = useState([])
   const [selected, setSelected] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [savingEnrollments, setSavingEnrollments] = useState(false)
   const [form, setForm] = useState({ firstName:'', lastName:'', phone:'', address:'', dateOfBirth: '' })
 
   useEffect(()=>{
@@ -20,7 +24,8 @@ export default function StudentDashboard(){
         const raw = localStorage.getItem('user')
         if (!raw) return
         const user = JSON.parse(raw)
-        const sid = user.id
+        // Handle both Id and id property names
+        const sid = user.id || user.Id
         const [s, cs] = await Promise.all([fetchStudent(sid), fetchCourses()])
         if(!mounted) return
         setStudent(s)
@@ -42,36 +47,69 @@ export default function StudentDashboard(){
   }
 
   async function saveEnrollments(){
-    if(!student) return
+    if(!student || savingEnrollments) return
+    setSavingEnrollments(true)
     try{
       await enrollStudent(student.id, Array.from(selected))
-      alert('Enrollments updated')
-      // Reload after alert is dismissed
+      success('Enrollments updated')
+      // Reload after toast
       setTimeout(() => {
         window.location.reload()
-      }, 100)
-    }catch(e){ console.error(e); alert('Failed to update enrollments') }
+      }, 1500)
+    }catch(e){ 
+      console.error(e)
+      error('Failed to update enrollments')
+      setSavingEnrollments(false)
+    }
   }
 
   async function saveProfile(){
-    if(!student) return
+    if(!student || saving) return
+    
+    // Validate required fields
+    if(!form.firstName || !form.firstName.trim()) {
+      error('First name is required')
+      return
+    }
+    if(!form.lastName || !form.lastName.trim()) {
+      error('Last name is required')
+      return
+    }
+    
+    setSaving(true)
     try{
-      const payload = { ...form }
-      if(payload.dateOfBirth === '') payload.dateOfBirth = null
-      const res = await updateStudent(student.id, payload)
+      // Prepare payload matching backend Student model
+      const payload = {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: student.email, // Keep original email
+        phone: form.phone?.trim() || null,
+        address: form.address?.trim() || null,
+        dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth + 'T00:00:00').toISOString() : null,
+        gender: student.gender || null,
+        role: student.role || 'Student'
+      }
+      
+      // Handle both id and Id property names
+      const studentId = student.id || student.Id
+      const res = await updateStudent(studentId, payload)
       // update local view and stored user name
       setStudent(prev => ({ ...prev, ...res }))
       const stored = JSON.parse(localStorage.getItem('user') || 'null')
       if(stored){ stored.firstName = res.firstName; stored.lastName = res.lastName; localStorage.setItem('user', JSON.stringify(stored)); window.dispatchEvent(new Event('authChanged')) }
       // Exit edit mode first
       setEditing(false)
-      // Show alert and reload after OK is clicked
-      alert('Profile saved')
-      // Reload after alert is dismissed
+      success('Profile saved')
+      // Reload after toast
       setTimeout(() => {
         window.location.reload()
-      }, 100)
-    }catch(e){ console.error(e); alert('Failed to save profile') }
+      }, 1500)
+    }catch(e){ 
+      console.error('Save error:', e)
+      const errorMsg = e?.response?.data?.message || e?.response?.data || e?.message || 'Failed to save profile'
+      error(errorMsg)
+      setSaving(false)
+    }
   }
 
   if(loading) return <div className="p-6">Loading...</div>
@@ -122,7 +160,9 @@ export default function StudentDashboard(){
                 <input value={form.address} onChange={e=> setForm(f=> ({...f, address: e.target.value}))} className="w-full border rounded px-3 py-2" />
               </div>
               <div className="flex justify-end">
-                <button onClick={saveProfile} className="btn-primary">Save</button>
+                <button onClick={saveProfile} className="btn-primary" disabled={saving}>
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </div>
           )}
@@ -143,7 +183,9 @@ export default function StudentDashboard(){
             ))}
           </div>
           <div className="mt-4">
-            <button onClick={saveEnrollments} className="btn-primary">Save Enrollments</button>
+            <button onClick={saveEnrollments} className="btn-primary" disabled={savingEnrollments}>
+              {savingEnrollments ? 'Saving...' : 'Save Enrollments'}
+            </button>
           </div>
         </div>
       </div>

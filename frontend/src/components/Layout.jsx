@@ -42,14 +42,8 @@ export default function Layout() {
 
   function handleLogout(){
     logout()
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
     setUser(null)
-    // Clear browser history and prevent back button access
-    window.history.replaceState(null, '', '/')
     navigate('/', { replace: true })
-    // Force a page reload to clear any cached state
-    window.location.href = '/'
   }
 
   return (

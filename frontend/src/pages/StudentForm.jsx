@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { createStudent, enrollStudent } from '../services/students'
 import CourseSelect from '../components/CourseSelect'
 import { useNavigate } from 'react-router-dom'
+import { useToast } from '../contexts/ToastContext'
 
 const studentSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -30,6 +31,7 @@ const studentSchema = z.object({
 
 export default function StudentForm(){
   const navigate = useNavigate()
+  const { success, error } = useToast()
   const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(studentSchema),
     defaultValues: { firstName: '', lastName: '', email: '', dateOfBirth: '', gender: '', phone: '', address: '', courseIds: [] }
@@ -49,10 +51,14 @@ export default function StudentForm(){
       if (data.courseIds && Array.isArray(data.courseIds) && data.courseIds.length > 0) {
         await enrollStudent(student.id, data.courseIds)
       }
-      navigate('/students')
+      success('Student created successfully')
+      setTimeout(() => {
+        navigate('/students')
+      }, 1000)
     } catch (err) {
       console.error(err)
-      alert('Failed to create student')
+      const errorMsg = err?.response?.data?.message || err?.response?.data || err.message
+      error('Failed to create student: ' + errorMsg)
     }
   }
 

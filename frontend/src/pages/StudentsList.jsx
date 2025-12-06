@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchStudents, deleteStudent } from '../services/students'
 import { TrashIcon, EyeIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { useToast } from '../contexts/ToastContext'
 
 function Avatar({ name }){
   const initials = (name||'').split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase()
@@ -11,11 +12,13 @@ function Avatar({ name }){
 }
 
 export default function StudentsList(){
+  const { success, error } = useToast()
   const [students, setStudents] = useState([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState({})
 
   useEffect(()=>{ load() },[page])
 
@@ -31,13 +34,17 @@ export default function StudentsList(){
   }
 
   async function handleDelete(id){
-    if(!confirm('Delete this student?')) return
+    if(!window.confirm('Delete this student?')) return
+    setDeleting(prev => ({ ...prev, [id]: true }))
     try{
       await deleteStudent(id)
+      success('Student deleted successfully')
       await load()
     }catch(err){
       console.error(err)
-      alert('Failed to delete student')
+      error('Failed to delete student')
+    } finally {
+      setDeleting(prev => ({ ...prev, [id]: false }))
     }
   }
 
@@ -105,7 +112,9 @@ export default function StudentsList(){
                 <td className="py-3 text-center">{s.courseIds ? s.courseIds.length : (s.enrollments ? s.enrollments.length : 0)}</td>
                 <td className="py-3 text-right">
                   <Link to={`/students/${s.id}`} className="inline-flex items-center gap-2 text-primary mr-3"><EyeIcon className="w-4 h-4"/>View</Link>
-                  <button onClick={()=> handleDelete(s.id)} className="inline-flex items-center gap-2 text-red-600"><TrashIcon className="w-4 h-4"/>Delete</button>
+                  <button onClick={()=> handleDelete(s.id)} className="inline-flex items-center gap-2 text-red-600" disabled={deleting[s.id]}>
+                    <TrashIcon className="w-4 h-4"/>{deleting[s.id] ? 'Deleting...' : 'Delete'}
+                  </button>
                 </td>
               </tr>
             ))}

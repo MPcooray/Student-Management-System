@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { login, getCurrentUser } from '../services/auth'
+import { useToast } from '../contexts/ToastContext'
 
 export default function Login(){
-  const { register: r, handleSubmit } = useForm()
+  const { register: r, handleSubmit, formState: { isSubmitting } } = useForm()
   const navigate = useNavigate()
+  const { success, error } = useToast()
 
   // Redirect if already logged in
   useEffect(() => {
@@ -24,14 +26,20 @@ export default function Login(){
   async function onSubmit(data){
     try{
       const res = await login({ email: data.email, password: data.password })
-      // store basic user info if present
-      if (res?.user) localStorage.setItem('user', JSON.stringify(res.user))
+      // store basic user info if present, normalize Id to id
+      if (res?.user) {
+        const user = { ...res.user, id: res.user.id || res.user.Id }
+        localStorage.setItem('user', JSON.stringify(user))
+      }
+      success('Login successful!')
       // redirect based on role
       const role = res?.user?.role || ''
-      if (role === 'Admin') navigate('/dashboard')
-      else navigate('/student-dashboard')
+      setTimeout(() => {
+        if (role === 'Admin') navigate('/dashboard')
+        else navigate('/student-dashboard')
+      }, 500)
     }catch(err){
-      alert('Login failed: ' + (err?.response?.data || err.message))
+      error('Login failed: ' + (err?.response?.data?.message || err?.response?.data || err.message))
     }
   }
 
@@ -50,7 +58,9 @@ export default function Login(){
             <input {...r('password', { required: true })} type="password" className="input" />
           </div>
           <div>
-            <button type="submit" className="btn-primary w-full">Login</button>
+            <button type="submit" className="btn-primary w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
+            </button>
           </div>
         </form>
       </div>

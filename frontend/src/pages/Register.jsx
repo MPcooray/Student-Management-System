@@ -2,10 +2,12 @@ import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { register as registerUser, login, getCurrentUser } from '../services/auth'
+import { useToast } from '../contexts/ToastContext'
 
 export default function Register(){
-  const { register: r, handleSubmit } = useForm()
+  const { register: r, handleSubmit, formState: { isSubmitting } } = useForm()
   const navigate = useNavigate()
+  const { success, error } = useToast()
 
   // Redirect if already logged in
   useEffect(() => {
@@ -35,9 +37,13 @@ export default function Register(){
       // attempt login automatically
       const res = await login({ email: data.email, password: data.password })
       if (res?.user) localStorage.setItem('user', JSON.stringify(res.user))
-      navigate('/')
+      success('Registration successful!')
+      setTimeout(() => {
+        navigate('/')
+      }, 500)
     }catch(err){
-      alert('Registration failed: ' + (err?.response?.data || err.message))
+      const errorMsg = err?.response?.data?.message || err?.response?.data || err.message
+      error('Registration failed: ' + errorMsg)
     }
   }
 
@@ -78,7 +84,9 @@ export default function Register(){
             <input {...r('address')} className="input" />
           </div>
           <div>
-            <button type="submit" className="btn-primary w-full">Create account</button>
+            <button type="submit" className="btn-primary w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating account...' : 'Create account'}
+            </button>
           </div>
         </form>
       </div>
