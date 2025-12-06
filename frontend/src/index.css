@@ -5,10 +5,57 @@
 /* Custom overrides and small helpers */
 @layer components {
   .container { @apply max-w-6xl mx-auto px-4 }
-  .card { @apply bg-white rounded-lg shadow p-4 }
+  .card { @apply bg-white rounded-xl shadow-card-sm p-6 }
   .btn { @apply inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-white }
+  .input { @apply border border-gray-200 rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-sky-300 w-full }
+  .btn-primary { @apply btn bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 font-medium }
 }
 
 @layer utilities {
   .muted { @apply text-sm text-gray-500 }
+}
+
+/* Animation helper class */
+.fade-in { animation: fade-in 420ms cubic-bezier(.2,.9,.2,1) both }
+
+/* subtle hover elevation */
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(17,24,39,0.08); }
+
+/* Animated moving gradient background */
+@keyframes moving-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bg-moving-gradient {
+  /* blue-only gradient: soft sky -> blue -> deep indigo */
+  background: linear-gradient(270deg, #0ea5e9 0%, #3b82f6 50%, #1e40af 100%);
+  background-size: 1200% 1200%;
+  animation: moving-gradient 18s ease-in-out infinite;
+}
+
+/* Apply a stronger, fixed animated gradient directly to the page body */
+body {
+  background: linear-gradient(135deg, #071033 0%, #0b3dd1 35%, #2563eb 65%, #06b6d4 100%);
+  background-attachment: fixed;
+  background-size: 1200% 1200%;
+  animation: moving-gradient 20s ease-in-out infinite;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Make the app root fill the viewport and show gradient behind cards */
+.app-bg {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-attachment: fixed;
+}
+
+/* gentle overlay so cards remain readable */
+.bg-overlay {
+  /* fully transparent overlay so the body gradient shows through */
+  background: transparent;
+  min-height: 100vh;
 }

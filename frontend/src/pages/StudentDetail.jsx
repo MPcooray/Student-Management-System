@@ -36,7 +36,22 @@ export default function StudentDetail(){
       <h2 className="text-xl font-semibold mb-4">{student.firstName} {student.lastName}</h2>
       <div className="card mb-4">
         <div className="mb-2"><strong>Email:</strong> {student.email}</div>
-        <div className="mb-2"><strong>DOB:</strong> {student.dateOfBirth}</div>
+        {student.dateOfBirth ? (() => {
+          const dob = new Date(student.dateOfBirth)
+          const today = new Date()
+          let age = '—'
+          if (!isNaN(dob.getTime())){
+            age = today.getFullYear() - dob.getFullYear()
+            const m = today.getMonth() - dob.getMonth()
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age -= 1
+          }
+          return (
+            <>
+              <div className="mb-2"><strong>DOB:</strong> {isNaN(dob.getTime()) ? student.dateOfBirth : dob.toLocaleDateString()}</div>
+              <div className="mb-2"><strong>Age:</strong> {age}</div>
+            </>
+          )
+        })() : <div className="mb-2"><strong>DOB:</strong> —</div>}
         <div className="mb-2"><strong>Phone:</strong> {student.phone}</div>
         <div className="mb-2"><strong>Address:</strong> {student.address}</div>
       </div>

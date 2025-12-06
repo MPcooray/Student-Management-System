@@ -6,8 +6,12 @@ import { BrowserRouter } from 'react-router-dom'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <div className="bg-moving-gradient app-bg">
+      <div className="bg-overlay">
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </div>
+    </div>
   </StrictMode>
 )

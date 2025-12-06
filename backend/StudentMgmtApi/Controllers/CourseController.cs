@@ -16,6 +16,7 @@ namespace StudentMgmtApi.Controllers
         public async Task<IActionResult> GetAll() => Ok(await _db.Courses.ToListAsync());
 
         [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create([FromBody] Course course)
         {
             _db.Courses.Add(course);
@@ -24,6 +25,7 @@ namespace StudentMgmtApi.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(int id)
         {
             var course = await _db.Courses.FindAsync(id);

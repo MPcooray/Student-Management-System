@@ -1,58 +1,90 @@
 import React, { useEffect, useState } from 'react'
 import { fetchCourses, createCourse, deleteCourse } from '../services/courses'
+import { TrashIcon, PlusIcon } from '@heroicons/react/24/outline'
 
 export default function CoursesPage(){
+  const rawUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+  const currentUser = rawUser ? JSON.parse(rawUser) : null
+  const isAdmin = currentUser?.role === 'Admin'
   const [courses, setCourses] = useState([])
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [credits, setCredits] = useState(3)
+  const [loading, setLoading] = useState(false)
 
   useEffect(()=>{ load() },[])
   async function load(){
-    setCourses(await fetchCourses())
+    setLoading(true)
+    try{ setCourses(await fetchCourses() || []) }catch(e){ console.error(e) }
+    finally{ setLoading(false) }
   }
 
   async function add(){
-    const c = await createCourse({ name, code, credits })
-    setName(''); setCode(''); setCredits(3)
-    load()
+    if(!name || !code) return alert('Please provide name and code')
+    if(!isAdmin) return alert('Only admins can create courses')
+    try{
+      await createCourse({ name, code, credits })
+      setName(''); setCode(''); setCredits(3)
+      await load()
+    }catch(err){ console.error(err); alert('Failed to create course') }
   }
 
   async function remove(id){
     if(!confirm('Delete course?')) return
     try{
       await deleteCourse(id)
-      alert('Deleted')
-      load()
-    }catch(err){
-      console.error(err)
-      alert('Failed to delete course')
-    }
+      await load()
+    }catch(err){ console.error(err); alert('Failed to delete course') }
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Courses</h2>
-      </div>
-      <div className="card mb-4">
-        <div className="grid grid-cols-3 gap-2">
-          <input value={name} onChange={e=> setName(e.target.value)} placeholder="Name" className="border rounded px-2 py-1" />
-          <input value={code} onChange={e=> setCode(e.target.value)} placeholder="Code" className="border rounded px-2 py-1" />
-          <input type="number" value={credits} onChange={e=> setCredits(Number(e.target.value))} className="border rounded px-2 py-1" />
-        </div>
-        <div className="mt-2">
-          <button onClick={add} className="btn">Create</button>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Courses</h2>
+          <p className="text-sm text-gray-600">Create and manage course offerings.</p>
         </div>
       </div>
 
-      <div className="card">
+      <div className="card mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input aria-label="Course name" value={name} onChange={e=> setName(e.target.value)} placeholder="Name" className="border rounded-md px-3 py-2" />
+          <input aria-label="Course code" value={code} onChange={e=> setCode(e.target.value)} placeholder="Code" className="border rounded-md px-3 py-2" />
+          <input aria-label="Credits" type="number" value={credits} onChange={e=> setCredits(Number(e.target.value))} className="border rounded-md px-3 py-2" />
+        </div>
+        <div className="mt-3">
+          <button onClick={add} className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md shadow"><PlusIcon className="w-4 h-4"/> Create</button>
+        </div>
+      </div>
+
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
-          <thead><tr className="text-left text-gray-600"><th>ID</th><th>Name</th><th>Code</th><th>Credits</th><th></th></tr></thead>
+          <thead>
+            <tr className="text-left text-gray-600">
+              <th className="w-12">ID</th>
+              <th>Name</th>
+              <th>Code</th>
+              <th className="w-24">Credits</th>
+              <th className="w-28"></th>
+            </tr>
+          </thead>
           <tbody>
             {courses.map(c=> (
-              <tr key={c.id} className="border-t"><td className="py-2">{c.id}</td><td>{c.name}</td><td>{c.code}</td><td>{c.credits}</td><td className="text-right"><button onClick={()=> remove(c.id)} className="text-red-600">Delete</button></td></tr>
+              <tr key={c.id} className="border-t">
+                <td className="py-3">{c.id}</td>
+                <td className="py-3 font-medium text-gray-800">{c.name}</td>
+                <td className="py-3 text-xs text-gray-500">{c.code}</td>
+                <td className="py-3">{c.credits ?? 3}</td>
+                <td className="py-3 text-right">
+                  {isAdmin ? (
+                    <button onClick={()=> remove(c.id)} className="inline-flex items-center gap-2 text-red-600"><TrashIcon className="w-4 h-4"/>Delete</button>
+                  ) : (
+                    <span className="text-xs text-gray-400">Admin only</span>
+                  )}
+                </td>
+              </tr>
             ))}
+            {courses.length === 0 && !loading && (<tr><td colSpan={5} className="py-6 text-center text-gray-500">No courses yet</td></tr>)}
           </tbody>
         </table>
       </div>

@@ -37,6 +37,8 @@ namespace StudentMgmtApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Student student)
         {
+            // ensure CreatedAt is set to the current time (UTC)
+            student.CreatedAt = DateTime.UtcNow;
             _db.Students.Add(student);
             await _db.SaveChangesAsync();
             return CreatedAtAction(nameof(Get), new { id = student.Id }, student);
@@ -44,10 +46,23 @@ namespace StudentMgmtApi.Controllers
 
         // Enroll a student in multiple courses (body: { courseIds: [1,2,3] })
         [HttpPost("{id:int}/enroll")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
         public async Task<IActionResult> Enroll(int id, [FromBody] int[] courseIds)
         {
             var student = await _db.Students.FindAsync(id);
             if (student == null) return NotFound();
+
+            // Only allow the student themself or an Admin to modify enrollments.
+            var isAdmin = User.Claims.Any(c => c.Type == "role" && c.Value == "Admin");
+            if (!isAdmin)
+            {
+                // extract user id from JWT 'sub' claim
+                var sub = User.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+                if (!int.TryParse(sub, out var userId) || userId != id)
+                {
+                    return Forbid();
+                }
+            }
 
             // normalize input
             var desired = (courseIds ?? Array.Empty<int>()).ToHashSet();
@@ -84,6 +99,38 @@ namespace StudentMgmtApi.Controllers
             _db.Students.Remove(student);
             await _db.SaveChangesAsync();
             return NoContent();
+        }
+
+        // Update a student's profile (only the student themself or an Admin)
+        [HttpPut("{id:int}")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> Update(int id, [FromBody] Student updated)
+        {
+            var student = await _db.Students.FindAsync(id);
+            if (student == null) return NotFound();
+
+            // Only allow the student themself or an Admin to update
+            var isAdmin = User.Claims.Any(c => c.Type == "role" && c.Value == "Admin");
+            if (!isAdmin)
+            {
+                var sub = User.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+                if (!int.TryParse(sub, out var userId) || userId != id)
+                {
+                    return Forbid();
+                }
+            }
+
+            // Update allowed fields
+            student.FirstName = updated.FirstName ?? student.FirstName;
+            student.LastName = updated.LastName ?? student.LastName;
+            student.Phone = updated.Phone ?? student.Phone;
+            student.Address = updated.Address ?? student.Address;
+            student.DateOfBirth = updated.DateOfBirth ?? student.DateOfBirth;
+            student.Gender = updated.Gender ?? student.Gender;
+
+            _db.Students.Update(student);
+            await _db.SaveChangesAsync();
+            return Ok(new { student.Id, student.Email, student.FirstName, student.LastName, student.Phone, student.Address, student.DateOfBirth, student.Gender, student.Role });
         }
     }
 }
