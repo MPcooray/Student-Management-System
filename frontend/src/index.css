@@ -35,27 +35,171 @@
   animation: moving-gradient 18s ease-in-out infinite;
 }
 
-/* Apply a stronger, fixed animated gradient directly to the page body */
 body {
-  background: linear-gradient(135deg, #071033 0%, #0b3dd1 35%, #2563eb 65%, #06b6d4 100%);
-  background-attachment: fixed;
-  background-size: 1200% 1200%;
-  animation: moving-gradient 20s ease-in-out infinite;
+  margin: 0;
+  padding: 0;
+  background: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Make the app root fill the viewport and show gradient behind cards */
-.app-bg {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-attachment: fixed;
+html {
+  background: transparent;
 }
 
-/* gentle overlay so cards remain readable */
-.bg-overlay {
-  /* fully transparent overlay so the body gradient shows through */
-  background: transparent;
-  min-height: 100vh;
+/* Gradient animation keyframes */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Page background for non-home pages */
+.page-background {
+  background: #667eea;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.page-background::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/students.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  opacity: 0.15;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page-background > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Home page background image */
+.home-image-bg {
+  background-image: url('/students.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+/* Professional Navigation Bar Styles */
+.nav-gradient-header {
+  background: rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.nav-link {
+  @apply text-sm font-medium px-4 py-2 rounded-lg transition-all duration-200;
+  position: relative;
+}
+
+.nav-link-home {
+  @apply text-white/80 hover:text-white;
+}
+
+.nav-link-home:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-link-home::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: width 0.3s ease;
+}
+
+.nav-link-home:hover::after {
+  width: 60%;
+}
+
+.nav-link-default {
+  @apply text-gray-700 hover:text-blue-600;
+}
+
+.nav-link-default:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.nav-button {
+  @apply px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200;
+  letter-spacing: 0.01em;
+}
+
+.nav-button-home {
+  @apply text-white/90 hover:text-white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nav-button-home:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button-default {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button-default:hover {
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+.nav-button-register-home {
+  @apply text-white;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button-register-home:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 1) 0%, rgba(99, 102, 241, 1) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+.nav-button-register-default {
+  @apply bg-blue-600 text-white border border-blue-600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button-register-default:hover {
+  @apply bg-blue-700 border-blue-700;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
 }

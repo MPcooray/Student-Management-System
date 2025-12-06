@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import StudentDashboard from './pages/StudentDashboard'
@@ -18,12 +19,54 @@ export default function RoutesApp(){
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
-        <Route path="students" element={<StudentsList />} />
-        <Route path="students/new" element={<StudentForm />} />
-        <Route path="students/:id" element={<StudentDetail />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="student-dashboard" element={<StudentDashboard />} />
-        <Route path="courses" element={<CoursesPage />} />
+        <Route 
+          path="students" 
+          element={
+            <ProtectedRoute requiredRole="Admin">
+              <StudentsList />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="students/new" 
+          element={
+            <ProtectedRoute requiredRole="Admin">
+              <StudentForm />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="students/:id" 
+          element={
+            <ProtectedRoute requiredRole="Admin">
+              <StudentDetail />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="dashboard" 
+          element={
+            <ProtectedRoute requiredRole="Admin">
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="student-dashboard" 
+          element={
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="courses" 
+          element={
+            <ProtectedRoute requiredRole="Admin">
+              <CoursesPage />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
     </Routes>
   )

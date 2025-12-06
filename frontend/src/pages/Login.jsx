@@ -1,11 +1,25 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { login } from '../services/auth'
+import { login, getCurrentUser } from '../services/auth'
 
 export default function Login(){
   const { register: r, handleSubmit } = useForm()
   const navigate = useNavigate()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const user = getCurrentUser()
+    if (token && user) {
+      const role = user.role || ''
+      if (role === 'Admin') {
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/student-dashboard', { replace: true })
+      }
+    }
+  }, [navigate])
 
   async function onSubmit(data){
     try{
