@@ -57,12 +57,7 @@ export default function Layout() {
       <header className={`${isHomePage ? 'nav-gradient-header' : 'bg-white/90 backdrop-blur-sm shadow-sm'} relative z-30`}>
         <div className="container flex items-center justify-between py-4">
           <Link to="/" className={`text-lg font-semibold tracking-tight ${isHomePage ? 'text-white' : 'text-gray-900'} transition-opacity hover:opacity-80`}>
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-lg ${isHomePage ? 'bg-white/20' : 'bg-blue-600'} flex items-center justify-center`}>
-                <span className={`text-sm font-bold ${isHomePage ? 'text-white' : 'text-white'}`}>S</span>
-              </div>
-              <span>Student Management System</span>
-            </div>
+            Student Management System
           </Link>
           <nav className="flex items-center gap-1">
             {user && user.role === 'Admin' && (

@@ -19,7 +19,7 @@ export default function StudentDetail(){
     try{
       await enrollStudent(id, student.courseIds || [])
       alert('Saved')
-      load()
+      navigate('/students')
     }catch(e){ console.error(e); alert('Failed') }
   }
 

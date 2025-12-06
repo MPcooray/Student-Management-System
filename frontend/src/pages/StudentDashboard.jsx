@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fetchStudent, enrollStudent, updateStudent } from '../services/students'
 import { fetchCourses } from '../services/courses'
 
 export default function StudentDashboard(){
+  const navigate = useNavigate()
   const [student, setStudent] = useState(null)
   const [courses, setCourses] = useState([])
   const [selected, setSelected] = useState(new Set())
@@ -44,6 +46,10 @@ export default function StudentDashboard(){
     try{
       await enrollStudent(student.id, Array.from(selected))
       alert('Enrollments updated')
+      // Reload after alert is dismissed
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
     }catch(e){ console.error(e); alert('Failed to update enrollments') }
   }
 
@@ -57,8 +63,14 @@ export default function StudentDashboard(){
       setStudent(prev => ({ ...prev, ...res }))
       const stored = JSON.parse(localStorage.getItem('user') || 'null')
       if(stored){ stored.firstName = res.firstName; stored.lastName = res.lastName; localStorage.setItem('user', JSON.stringify(stored)); window.dispatchEvent(new Event('authChanged')) }
+      // Exit edit mode first
       setEditing(false)
+      // Show alert and reload after OK is clicked
       alert('Profile saved')
+      // Reload after alert is dismissed
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
     }catch(e){ console.error(e); alert('Failed to save profile') }
   }
 
