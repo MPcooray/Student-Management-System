@@ -89,11 +89,14 @@ namespace StudentMgmtApi.Controllers
             var key = jwtSection.GetValue<string>("Key") ?? "please-change-this-secret-in-production";
             var issuer = jwtSection.GetValue<string>("Issuer") ?? "StudentMgmtApi";
 
+            // Normalize role to avoid case/whitespace issues when enforcing policies
+            var role = string.IsNullOrWhiteSpace(user.Role) ? "Student" : user.Role.Trim();
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("role", user.Role ?? "Student"),
+                new Claim("role", role),
                 new Claim("name", user.FirstName + " " + user.LastName)
             };
 

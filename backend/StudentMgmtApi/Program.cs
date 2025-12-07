@@ -9,6 +9,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Make JWT claim types predictable (don't remap to legacy WS-* claim types)
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
@@ -51,7 +55,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("role", "Admin"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
 
 // CORS for the React dev server
@@ -81,9 +85,10 @@ using (var scope = app.Services.CreateScope())
     // Seed a default admin user if none exists (development convenience)
     try
     {
-        if (!db.Students.Any(s => s.Role == "Admin"))
+        var admin = db.Students.FirstOrDefault(s => s.Email == "admin@school.local");
+        if (admin == null)
         {
-            var admin = new Student
+            admin = new Student
             {
                 FirstName = "Site",
                 LastName = "Admin",
@@ -96,6 +101,25 @@ using (var scope = app.Services.CreateScope())
             };
             db.Students.Add(admin);
             db.SaveChanges();
+        }
+        else
+        {
+            bool updated = false;
+            if (string.IsNullOrWhiteSpace(admin.Role) || admin.Role != "Admin")
+            {
+                admin.Role = "Admin";
+                updated = true;
+            }
+            if (string.IsNullOrWhiteSpace(admin.PasswordHash))
+            {
+                admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+                updated = true;
+            }
+            if (updated)
+            {
+                db.Students.Update(admin);
+                db.SaveChanges();
+            }
         }
     }
     catch (Exception ex)
