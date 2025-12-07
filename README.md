@@ -2,7 +2,7 @@
 
 Full-stack web application for managing student registrations, course enrollments, and role-based access control. Built with ASP.NET Core 9 (.NET 9) backend and React 18 + Vite frontend.
 
-## 📋 Project Overview
+## Project Overview
 
 This system allows:
 - **Students** to register, log in, manage their profile, and enroll in courses
@@ -10,7 +10,7 @@ This system allows:
 - **Secure authentication** via JWT tokens with role-based authorization (Admin/Student)
 - **Modern UI** with Tailwind CSS, responsive design, and real-time updates
 
-## 🚀 Features
+## Features
 
 ### Authentication & Authorization
 - Student registration with email/password (hashed with BCrypt)
@@ -40,7 +40,7 @@ This system allows:
 - Toast notifications for user feedback
 - Consistent styling and branding
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - **Framework**: ASP.NET Core 9 Web API
@@ -59,7 +59,7 @@ This system allows:
 - **HTTP Client**: Axios with JWT interceptor
 - **State Management**: Context API + localStorage
 
-## 📦 Prerequisites
+## Prerequisites
 
 - **.NET 9 SDK** ([Download](https://dotnet.microsoft.com/download/dotnet/9.0))
 - **Node.js 18+** and npm ([Download](https://nodejs.org/))
@@ -134,7 +134,7 @@ The frontend will start on `http://localhost:5173` (or next available port)
 VITE_API_URL=http://localhost:5269/api
 ```
 
-## 🎯 Usage
+## Usage
 
 ### Default Admin Account
 - **Email**: `admin@school.local`
@@ -171,7 +171,7 @@ VITE_API_URL=http://localhost:5269/api
 - `POST /api/courses` - Create course (Admin only)
 - `DELETE /api/courses/{id}` - Delete course (Admin only)
 
-## 🗂️ Database Schema
+## Database Schema
 
 ### Students Table
 | Column | Type | Constraints |
@@ -205,7 +205,7 @@ VITE_API_URL=http://localhost:5269/api
 | CourseId | int | Foreign Key → Courses(Id) |
 | EnrolledAt | datetime2 | Default: GETUTCDATE() |
 
-## 🧪 Testing
+## Testing
 
 ### Manual Testing Workflow
 1. **Admin Login**: Use `admin@school.local` / `Admin123!`
