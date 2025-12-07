@@ -11,6 +11,7 @@ const studentSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   dateOfBirth: z.string().min(1, 'Date of birth is required').refine(val => {
     const d = new Date(val)
     if (isNaN(d.getTime())) return false
@@ -26,7 +27,7 @@ const studentSchema = z.object({
     return /^\d{10}$/.test(v)
   }, { message: 'Phone number must be exactly 10 digits' }),
   address: z.string().optional(),
-  courseIds: z.array(z.number()).min(1, 'Please select at least one course')
+  courseIds: z.array(z.number()).optional()
 })
 
 export default function StudentForm(){
@@ -34,7 +35,7 @@ export default function StudentForm(){
   const { success, error } = useToast()
   const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(studentSchema),
-    defaultValues: { firstName: '', lastName: '', email: '', dateOfBirth: '', gender: '', phone: '', address: '', courseIds: [] }
+    defaultValues: { firstName: '', lastName: '', email: '', password: '', dateOfBirth: '', gender: '', phone: '', address: '', courseIds: [] }
   })
 
   // compute an input max date so the user cannot pick a DOB that makes them younger than 17
@@ -80,6 +81,11 @@ export default function StudentForm(){
           <label className="block text-sm">Email</label>
           <input type="email" {...register('email')} className="w-full border rounded px-3 py-2" />
           {errors.email && <div className="text-sm text-red-600">{errors.email.message}</div>}
+        </div>
+        <div>
+          <label className="block text-sm">Password</label>
+          <input type="password" {...register('password')} className="w-full border rounded px-3 py-2" />
+          {errors.password && <div className="text-sm text-red-600">{errors.password.message}</div>}
         </div>
         
         <div>
